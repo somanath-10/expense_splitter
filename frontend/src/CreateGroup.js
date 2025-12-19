@@ -9,7 +9,7 @@ const CreateGroup = ({ onSuccess }) => {
 
   // Fetch users so we can add them to the group
   useEffect(() => {
-    axios.get('http://localhost:5000/api/users')
+    axios.get('https://expense-splitter-n6it.onrender.com/api/users')
       .then(res => setAllUsers(res.data));
   }, []);
 
@@ -26,7 +26,7 @@ const CreateGroup = ({ onSuccess }) => {
     if (!groupName || selectedIds.length === 0) return alert("Enter name and select members");
 
     try {
-      await axios.post('http://localhost:5000/api/groups', {
+      await axios.post('https://expense-splitter-n6it.onrender.com/api/groups', {
         name: groupName,
         memberIds: selectedIds
       });

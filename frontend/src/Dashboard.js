@@ -9,7 +9,7 @@ const Dashboard = ({ user }) => {
 
   useEffect(() => {
     if (user) {
-      axios.get(`http://localhost:5000/api/user/${user.userId}/dashboard`)
+      axios.get(`https://expense-splitter-n6it.onrender.com/api/user/${user.userId}/dashboard`)
         .then(res => setBalances(res.data))
         .catch(err => console.error(err));
     }
@@ -31,7 +31,7 @@ const Dashboard = ({ user }) => {
       // However, our current simple /settle API might rely on the logged-in user being the debtor.
       // Let's stick to settling debts "I OWE" for now to match your backend logic.
       
-      await axios.post('http://localhost:5000/api/settle', {
+      await axios.post('https://expense-splitter-n6it.onrender.com/api/settle', {
         expenseId,
         debtorId: user.userId 
       });

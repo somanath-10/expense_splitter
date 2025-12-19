@@ -13,8 +13,8 @@ const [groups, setGroups] = useState([]); // <--- New State
 
   useEffect(() => {
     // Fetch Users AND Groups
-    axios.get('http://localhost:5000/api/users').then(res => setAllUsers(res.data));
-    axios.get('http://localhost:5000/api/groups').then(res => setGroups(res.data)); // <--- New Fetch
+    axios.get('https://expense-splitter-n6it.onrender.com/api/users').then(res => setAllUsers(res.data));
+    axios.get('https://expense-splitter-n6it.onrender.com/api/groups').then(res => setGroups(res.data)); // <--- New Fetch
   }, []);
 
   // New Helper: When Group is selected, auto-check the boxes
@@ -52,7 +52,7 @@ const [groups, setGroups] = useState([]); // <--- New State
     }));
 
     try {
-      await axios.post('http://localhost:5000/api/expenses', {
+      await axios.post('https://expense-splitter-n6it.onrender.com/api/expenses', {
         description: desc,
         amount: Number(amount),
         payerId: user.userId,

@@ -7,7 +7,7 @@ const BalanceView = ({ groupId, refreshTrigger }) => {
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/groups/${groupId}/balance`);
+        const res = await axios.get(`https://expense-splitter-n6it.onrender.com/api/groups/${groupId}/balance`);
         setBalances(res.data);
       } catch (err) {
         console.error(err);

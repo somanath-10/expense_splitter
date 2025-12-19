@@ -9,7 +9,7 @@ const Login = ({ setUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { email, password });
+      const res = await axios.post('https://expense-splitter-n6it.onrender.com/api/login', { email, password });
       if (res.data.status === 'ok') {
         localStorage.setItem('token', res.data.token);
         const userData = { userId: res.data.userId, name: res.data.name };

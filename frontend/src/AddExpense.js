@@ -9,20 +9,17 @@ const AddExpense = ({ user, onSuccess }) => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [splitValues, setSplitValues] = useState({});
 
-const [groups, setGroups] = useState([]); // <--- New State
+const [groups, setGroups] = useState([]);
 
   useEffect(() => {
-    // Fetch Users AND Groups
     axios.get('https://expense-splitter-n6it.onrender.com/api/users').then(res => setAllUsers(res.data));
-    axios.get('https://expense-splitter-n6it.onrender.com/api/groups').then(res => setGroups(res.data)); // <--- New Fetch
+    axios.get('https://expense-splitter-n6it.onrender.com/api/groups').then(res => setGroups(res.data)); 
   }, []);
 
-  // New Helper: When Group is selected, auto-check the boxes
   const handleGroupSelect = (e) => {
     const groupId = e.target.value;
     if (!groupId) return;
     const group = groups.find(g => g._id === groupId);
-    // Select all members of the group
     const memberIds = group.members.map(m => m._id);
     setSelectedIds(memberIds);
   };
@@ -69,7 +66,6 @@ const [groups, setGroups] = useState([]); // <--- New State
     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
       <h3>Add Expense</h3>
       
-      {/* --- NEW GROUP SELECTOR --- */}
       <div style={{ marginBottom: '15px', padding: '10px', background: '#f0f0f0' }}>
         <label>Load from Group: </label>
         <select onChange={handleGroupSelect}>
@@ -77,7 +73,6 @@ const [groups, setGroups] = useState([]); // <--- New State
           {groups.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
         </select>
       </div>
-      {/* 1. Details */}
       <input 
         placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} 
         style={{ width: '100%', padding: '10px', marginBottom: '10px' }} 
@@ -87,7 +82,6 @@ const [groups, setGroups] = useState([]); // <--- New State
         style={{ width: '100%', padding: '10px', marginBottom: '10px' }} 
       />
 
-      {/* 2. Participants */}
       <h4>Who was involved? (Include yourself)</h4>
       <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', padding: '10px', marginBottom: '15px' }}>
         {allUsers.map(u => {
@@ -118,7 +112,6 @@ const [groups, setGroups] = useState([]); // <--- New State
         })}
       </div>
 
-      {/* 3. Split Type & Preview */}
       <div style={{ marginBottom: '15px' }}>
         <select value={splitType} onChange={e => setSplitType(e.target.value)} style={{ padding: '5px' }}>
           <option value="EQUAL">Equal Split</option>

@@ -8,18 +8,13 @@ const { User, Expense,Group } = require('./models');
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// JWT Secret Key (In real apps, put this in .env)
 const JWT_SECRET = "super_secret_key_123";
 
-// --- DB CONNECTION ---
 mongoose.connect('mongodb+srv://somanathr2004:iwp1hBSZtsv27JBA@cluster0.wyntp.mongodb.net/expense_splitter')
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-// --- AUTH ROUTES ---
 
-// 1. Register
 app.post('/api/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -31,7 +26,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// 2. Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -47,35 +41,25 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// 3. Get All Users (For the dropdown list)
 app.get('/api/users', async (req, res) => {
   const users = await User.find({}, 'name email');
   res.json(users);
 });
 
-// --- EXPENSE ROUTES ---
 
-// 4. Create Expense
 app.post('/api/expenses', async (req, res) => {
   const { description, amount, payerId, splitType, members } = req.body;
-  // 'members' = List of ALL participants including the Owner
   
   try {
     const totalAmount = Number(amount);
     let calculatedSplits = [];
-
-    // --- STEP 1: CALCULATE SPLIT FOR EVERYONE (Including Owner) ---
-    
-    if (splitType === 'EQUAL') {
-      // Logic: $100 / 3 people = $33.33 each
-      const splitAmount = parseFloat((totalAmount / members.length).toFixed(2));
-      
+        if (splitType === 'EQUAL') {
+      const splitAmount = parseFloat((totalAmount / members.length).toFixed(2));      
       calculatedSplits = members.map(m => ({
         user: m.userId,
         owed: splitAmount
       }));
 
-      // Penny adjustment (Give remainder to the first person, usually owner)
       const totalCalc = splitAmount * members.length;
       const difference = totalAmount - totalCalc;
       if (difference !== 0) {
@@ -83,7 +67,6 @@ app.post('/api/expenses', async (req, res) => {
       }
     } 
     else if (splitType === 'EXACT') {
-      // Validate: Alice($30) + Bob($30) + Charlie($40) = $100
       const sum = members.reduce((acc, m) => acc + Number(m.value), 0);
       if (sum !== totalAmount) return res.status(400).json({ error: "Total split amounts must equal the bill amount." });
       
@@ -99,9 +82,6 @@ app.post('/api/expenses', async (req, res) => {
       }));
     }
 
-    // --- STEP 2: REMOVE THE PAYER FROM DEBT LIST ---
-    // The owner paid $100. Their share was $33. 
-    // We only record that Bob owes $33 and Charlie owes $33.
     const finalDebts = calculatedSplits.filter(m => m.user !== payerId);
 
     if (finalDebts.length === 0) {
@@ -113,7 +93,7 @@ app.post('/api/expenses', async (req, res) => {
       amount: totalAmount,
       splitType,
       payer: payerId,
-      members: finalDebts // Saving only the debts of others
+      members: finalDebts 
     });
 
     res.json({ status: 'ok' });
@@ -130,9 +110,8 @@ app.post('/api/groups', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- NEW ROUTE: GET GROUPS ---
 app.post('/api/groups', async (req, res) => {
-  const { name, memberIds } = req.body; // Expects: { name: "Goa Trip", memberIds: ["id1", "id2"] }
+  const { name, memberIds } = req.body; 
   
   try {
     if (!memberIds || memberIds.length === 0) {
@@ -150,10 +129,8 @@ app.post('/api/groups', async (req, res) => {
   }
 });
 
-// NEW: API to Get All Groups (For the dropdown)
 app.get('/api/groups', async (req, res) => {
   try {
-    // .populate() replaces the ID with the actual User Object (name, email)
     const groups = await Group.find().populate('members'); 
     res.json(groups);
   } catch (err) {
@@ -162,11 +139,8 @@ app.get('/api/groups', async (req, res) => {
 });
 
 app.post('/api/expenses', async (req, res) => {
-  const { description, amount, payerId, splitType, members } = req.body;
-  // 'members' = The list of participants selected by the owner
-  
+  const { description, amount, payerId, splitType, members } = req.body;  
   try {
-    // Validation: Ensure valid data
     if (!members || members.length === 0) {
       return res.status(400).json({ error: "Please add at least one participant." });
     }
@@ -174,21 +148,14 @@ app.post('/api/expenses', async (req, res) => {
     let finalSplits = [];
     const totalAmount = Number(amount);
 
-    // --- SPLIT LOGIC ---
-    // The split happens ONLY among the 'members' array
     
     if (splitType === 'EQUAL') {
-      // Example: Amount 100, 2 Participants (Bob, Charlie).
-      // Calculation: 100 / 2 = 50 each.
       const splitAmount = parseFloat((totalAmount / members.length).toFixed(2));
       
       finalSplits = members.map(m => ({
         user: m.userId,
         owed: splitAmount
       }));
-
-      // Fix rounding errors (Penny adjustment)
-      // If 100 / 3 = 33.33 + 33.33 + 33.33 = 99.99. Add 0.01 to first person.
       const totalCalculated = splitAmount * members.length;
       const difference = totalAmount - totalCalculated;
       if (difference !== 0) {
@@ -196,14 +163,12 @@ app.post('/api/expenses', async (req, res) => {
       }
     } 
     else if (splitType === 'EXACT') {
-      // Validate totals
       const sum = members.reduce((acc, m) => acc + Number(m.value), 0);
       if (sum !== totalAmount) return res.status(400).json({ error: "Split amounts do not equal total." });
       
       finalSplits = members.map(m => ({ user: m.userId, owed: Number(m.value) }));
     } 
     else if (splitType === 'PERCENTAGE') {
-      // Validate percentage
       const sum = members.reduce((acc, m) => acc + Number(m.value), 0);
       if (sum !== 100) return res.status(400).json({ error: "Percentages must add up to 100%." });
 
@@ -213,7 +178,6 @@ app.post('/api/expenses', async (req, res) => {
       }));
     }
 
-    // Save to DB
     await Expense.create({
       description,
       amount: totalAmount,
@@ -228,38 +192,28 @@ app.post('/api/expenses', async (req, res) => {
   }
 });
 
-// 5. Get User Dashboard (Owed To Me vs I Owe)
-// backend/server.js
-
 app.get('/api/user/:userId/dashboard', async (req, res) => {
   const { userId } = req.params;
 
-  // 1. Fetch expenses involving the user
   const expenses = await Expense.find({
     $or: [ { payer: userId }, { "members.user": userId } ]
   }).populate('payer').populate('members.user');
 
   let balanceMap = {}; 
 
-  // 2. Process Expenses
   expenses.forEach(exp => {
-    // A. If I PAID (Others owe me)
     if (exp.payer._id.toString() === userId) {
       exp.members.forEach(m => {
         if (!m.settled && m.user._id.toString() !== userId) {
           const mId = m.user._id.toString();
           
-          // Init user in map if not exists
           if (!balanceMap[mId]) {
              balanceMap[mId] = { name: m.user.name, netBalance: 0, transactions: [] };
           }
           
-          // Update Math
           balanceMap[mId].netBalance += m.owed;
-          
-          // Add Description
           balanceMap[mId].transactions.push({
-            expenseId: exp._id, // <--- ADD THIS LINE
+            expenseId: exp._id, 
             description: exp.description,
             amount: m.owed,
             type: "OWES_YOU"
@@ -267,23 +221,19 @@ app.get('/api/user/:userId/dashboard', async (req, res) => {
         }
       });
     } 
-    // B. If I AM A MEMBER (I owe them)
     else {
       const myShare = exp.members.find(m => m.user._id.toString() === userId);
       if (myShare && !myShare.settled) {
         const payerId = exp.payer._id.toString();
         
-        // Init user in map if not exists
         if (!balanceMap[payerId]) {
            balanceMap[payerId] = { name: exp.payer.name, netBalance: 0, transactions: [] };
         }
 
-        // Update Math (Subtract because I owe)
         balanceMap[payerId].netBalance -= myShare.owed;
 
-        // Add Description
         balanceMap[payerId].transactions.push({
-            expenseId: exp._id, // <--- ADD THIS LINE
+            expenseId: exp._id, 
           description: exp.description,
           amount: myShare.owed,
           type: "YOU_OWE"
@@ -292,7 +242,6 @@ app.get('/api/user/:userId/dashboard', async (req, res) => {
     }
   });
 
-  // 3. Format Response
   const result = Object.keys(balanceMap).map(id => ({
     userId: id,
     name: balanceMap[id].name,
@@ -303,7 +252,6 @@ app.get('/api/user/:userId/dashboard', async (req, res) => {
   res.json(result);
 });
 
-// 6. Settle Up Endpoint
 app.post('/api/settle', async (req, res) => {
   const { expenseId, debtorId } = req.body;
   

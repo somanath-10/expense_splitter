@@ -7,7 +7,6 @@ const CreateGroup = ({ onSuccess }) => {
   const [groupName, setGroupName] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Fetch users so we can add them to the group
   useEffect(() => {
     axios.get('https://expense-splitter-n6it.onrender.com/api/users')
       .then(res => setAllUsers(res.data));
@@ -33,7 +32,7 @@ const CreateGroup = ({ onSuccess }) => {
       alert('Group Created!');
       setGroupName('');
       setSelectedIds([]);
-      if (onSuccess) onSuccess(); // Callback to refresh parent
+      if (onSuccess) onSuccess(); 
     } catch (err) {
       alert('Error creating group');
     }
